@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/hexaforce/swagger-echo/httputil"
 	"github.com/labstack/echo"
 )
 
@@ -20,9 +19,8 @@ import (
 // @Failure 404 {string} string "ok"
 // @Failure 500 {string} string "ok"
 // @Router /examples/ping [get]
-func (c *Controller) PingExample(e echo.Context) {
-	e.String(http.StatusOK, "pong")
-	return
+func (c *Controller) PingExample(ctx echo.Context) error {
+	return ctx.String(http.StatusOK, "pong")
 }
 
 // CalcExample godoc
@@ -38,19 +36,17 @@ func (c *Controller) PingExample(e echo.Context) {
 // @Failure 404 {string} string "ok"
 // @Failure 500 {string} string "ok"
 // @Router /examples/calc [get]
-func (c *Controller) CalcExample(e echo.Context) {
-	val1, err := strconv.Atoi(e.QueryParam("val1"))
+func (c *Controller) CalcExample(ctx echo.Context) error {
+	val1, err := strconv.Atoi(ctx.QueryParam("val1"))
 	if err != nil {
-		httputil.NewError(e, http.StatusBadRequest, err)
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error)
 	}
-	val2, err := strconv.Atoi(e.QueryParam("val2"))
+	val2, err := strconv.Atoi(ctx.QueryParam("val2"))
 	if err != nil {
-		httputil.NewError(e, http.StatusBadRequest, err)
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error)
 	}
 	ans := val1 + val2
-	e.String(http.StatusOK, fmt.Sprintf("%d", ans))
+	return ctx.String(http.StatusOK, fmt.Sprintf("%d", ans))
 }
 
 // PathParamsExample godoc
@@ -66,18 +62,16 @@ func (c *Controller) CalcExample(e echo.Context) {
 // @Failure 404 {string} string "ok"
 // @Failure 500 {string} string "ok"
 // @Router /examples/groups/{group_id}/accounts/{account_id} [get]
-func (c *Controller) PathParamsExample(e echo.Context) {
-	groupID, err := strconv.Atoi(e.Param("group_id"))
+func (c *Controller) PathParamsExample(ctx echo.Context) error {
+	groupID, err := strconv.Atoi(ctx.Param("group_id"))
 	if err != nil {
-		httputil.NewError(e, http.StatusBadRequest, err)
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error)
 	}
-	accountID, err := strconv.Atoi(e.Param("account_id"))
+	accountID, err := strconv.Atoi(ctx.Param("account_id"))
 	if err != nil {
-		httputil.NewError(e, http.StatusBadRequest, err)
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error)
 	}
-	e.String(http.StatusOK, fmt.Sprintf("group_id=%d account_id=%d", groupID, accountID))
+	return ctx.String(http.StatusOK, fmt.Sprintf("group_id=%d account_id=%d", groupID, accountID))
 }
 
 // HeaderExample godoc
@@ -92,8 +86,8 @@ func (c *Controller) PathParamsExample(e echo.Context) {
 // @Failure 404 {string} string "ok"
 // @Failure 500 {string} string "ok"
 // @Router /examples/header [get]
-func (c *Controller) HeaderExample(e echo.Context) {
-	e.String(http.StatusOK, e.Request().Header["Authorization"][0])
+func (c *Controller) HeaderExample(ctx echo.Context) error {
+	return ctx.String(http.StatusOK, ctx.Request().Header.Get("Authorization"))
 }
 
 // SecuritiesExample godoc
@@ -110,7 +104,8 @@ func (c *Controller) HeaderExample(e echo.Context) {
 // @Security ApiKeyAuth
 // @Security OAuth2Implicit[admin, write]
 // @Router /examples/securities [get]
-func (c *Controller) SecuritiesExample(e echo.Context) {
+func (c *Controller) SecuritiesExample(ctx echo.Context) error {
+	return nil
 }
 
 // AttributeExample godoc
@@ -130,13 +125,13 @@ func (c *Controller) SecuritiesExample(e echo.Context) {
 // @Failure 404 {string} string "ok"
 // @Failure 500 {string} string "ok"
 // @Router /examples/attribute [get]
-func (c *Controller) AttributeExample(e echo.Context) {
-	e.String(http.StatusOK, fmt.Sprintf("enumstring=%s enumint=%s enumnumber=%s string=%s int=%s default=%s",
-		e.QueryParam("enumstring"),
-		e.QueryParam("enumint"),
-		e.QueryParam("enumnumber"),
-		e.QueryParam("string"),
-		e.QueryParam("int"),
-		e.QueryParam("default"),
+func (c *Controller) AttributeExample(ctx echo.Context) error {
+	return ctx.String(http.StatusOK, fmt.Sprintf("enumstring=%s enumint=%s enumnumber=%s string=%s int=%s default=%s",
+		ctx.QueryParam("enumstring"),
+		ctx.QueryParam("enumint"),
+		ctx.QueryParam("enumnumber"),
+		ctx.QueryParam("string"),
+		ctx.QueryParam("int"),
+		ctx.QueryParam("default"),
 	))
 }

@@ -1,20 +1,13 @@
 package main
 
 import (
+	"errors"
 	"net/http"
 
-	// _ "github.com/hexaforce/swagger-echo/doc"
 	"github.com/hexaforce/swagger-echo/controller"
 	"github.com/labstack/echo"
+	"github.com/labstack/echo/middleware"
 	echoSwagger "github.com/swaggo/echo-swagger"
-	// "errors"
-	// "net/http"
-	// "github.com/gin-gonic/gin"
-	// "github.com/swaggo/swag/example/celler/controller"
-	// _ "github.com/swaggo/swag/example/celler/docs"
-	// "github.com/swaggo/swag/example/celler/httputil"
-	// ginSwagger "github.com/swaggo/gin-swagger"
-	// swaggerFiles "github.com/swaggo/gin-swagger/swaggerFiles"
 )
 
 // @title Swagger Example API
@@ -60,10 +53,18 @@ import (
 // @scope.admin Grants read and write access to administrative information
 
 func main() {
+
+	// Echo instance
 	e := echo.New()
 
+	// Middleware
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	// Controller
 	c := controller.NewController()
 
+	// Routes
 	v1 := e.Group("/api/v1")
 	{
 		accounts := v1.Group("/accounts")
@@ -82,7 +83,14 @@ func main() {
 		}
 		admin := v1.Group("/admin")
 		{
-			admin.Use(auth())
+			admin.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+				return func(c echo.Context) error {
+					if len(c.Request().Header.Get("Authorization")) == 0 {
+						return echo.NewHTTPError(http.StatusUnauthorized, errors.New("Authorization is required Header"))
+					}
+					return nil
+				}
+			})
 			admin.POST("/auth", c.Auth)
 		}
 		examples := v1.Group("/examples")
@@ -95,24 +103,15 @@ func main() {
 			examples.GET("attribute", c.AttributeExample)
 		}
 	}
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			// Extract the credentials from HTTP request header and perform a security
-			// check
 
-			// For invalid credentials
-			return echo.NewHTTPError(http.StatusUnauthorized, "Please provide valid credentials")
-
-			// For valid credentials call next
-			// return next(c)
-		}
-	})
+	// swaggerUI
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 	/*
 		Or can use EchoWrapHandler func with configurations.
-		url := echoSwagger.URL("http://localhost:8080/swagger/doc.json") //The url pointing to API definition
+		url := echoSwagger.URL("http://localhost:1323/swagger/doc.json") //The url pointing to API definition
 		e.GET("/swagger/*", echoSwagger.EchoWrapHandler(url))
 	*/
-	e.Logger.Fatal(e.Start(":8080"))
 
+	// Start server
+	e.Logger.Fatal(e.Start(":1323"))
 }

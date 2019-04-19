@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/hexaforce/swagger-echo/httputil"
 	"github.com/hexaforce/swagger-echo/model"
 	"github.com/labstack/echo"
 )
@@ -18,23 +17,21 @@ import (
 // @Produce  json
 // @Param  id path int true "Bottle ID"
 // @Success 200 {object} model.Bottle
-// @Failure 400 {object} echo.HTTPError
-// @Failure 404 {object} echo.HTTPError
-// @Failure 500 {object} echo.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
 // @Router /bottles/{id} [get]
-func (c *Controller) ShowBottle(e echo.Context) {
-	id := e.Param("id")
+func (c *Controller) ShowBottle(ctx echo.Context) error {
+	id := ctx.Param("id")
 	bid, err := strconv.Atoi(id)
 	if err != nil {
-		httputil.NewError(e, http.StatusBadRequest, err)
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error)
 	}
 	bottle, err := model.BottleOne(bid)
 	if err != nil {
-		httputil.NewError(e, http.StatusNotFound, err)
-		return
+		return echo.NewHTTPError(http.StatusNotFound, err.Error)
 	}
-	e.JSON(http.StatusOK, bottle)
+	return ctx.JSON(http.StatusOK, bottle)
 }
 
 // ListBottles godoc
@@ -44,15 +41,14 @@ func (c *Controller) ShowBottle(e echo.Context) {
 // @Accept  json
 // @Produce  json
 // @Success 200 {array} model.Bottle
-// @Failure 400 {object} echo.HTTPError
-// @Failure 404 {object} echo.HTTPError
-// @Failure 500 {object} echo.HTTPError
+// @Failure 400 {object} httputil.HTTPError
+// @Failure 404 {object} httputil.HTTPError
+// @Failure 500 {object} httputil.HTTPError
 // @Router /bottles [get]
-func (c *Controller) ListBottles(e echo.Context) {
+func (c *Controller) ListBottles(ctx echo.Context) error {
 	bottles, err := model.BottlesAll()
 	if err != nil {
-		httputil.NewError(e, http.StatusNotFound, err)
-		return
+		return echo.NewHTTPError(http.StatusNotFound, err.Error)
 	}
-	e.JSON(http.StatusOK, bottles)
+	return ctx.JSON(http.StatusOK, bottles)
 }
